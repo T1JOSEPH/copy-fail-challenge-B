@@ -62,7 +62,7 @@ Cambia el valor `KERNEL_REPO`:
 "KERNEL_REPO": "TU-ORG/copy-fail-lab"
 ```
 
-Commit y push.
+Commit y push.vi init
 
 ### 4. Disparar el workflow del kernel
 
