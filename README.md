@@ -55,6 +55,7 @@ gh repo create TU-ORG/copy-fail-lab --public --source=. --push
 
 GitHub → tu repo → Settings → marcar `Template repository`.
 
+
 ### 3. Editar `.devcontainer/devcontainer.json`
 
 Cambia el valor `KERNEL_REPO`:
@@ -136,3 +137,108 @@ Esta v2 incorpora los siguientes fixes respecto a la v1:
 - BusyBox: deshabilitado `CONFIG_TC` (rompe compilación con kernels nuevos)
 - BusyBox: forzado `CONFIG_STATIC=y` y verificado con `file`
 - Workflow Actions: greps de verificación con `|| echo`, tolerantes
+
+#Comando ejecutados
+  ╔═══════════════════════════════════════════════╗
+  ║  Kernel vulnerable: 6.12.0               ║
+  ║  CVE-2026-31431 Copy Fail Lab                ║
+  ╚═══════════════════════════════════════════════╝
+
+-sh: can't access tty; job control turned off
+~ $ cat /proc/modules
+cat: can't open '/proc/modules': No such file or directory
+~ $ {
+>   echo "=== HITO 1: KERNEL VULNERABLE CONFIRMADO ==="
+>   echo "Fecha: $(date)"
+>   echo "Kernel: $(uname -r)"
+>   echo "Identidad: $(id)"
+>   echo "whoami: $(whoami)"
+>   echo "Nota: /proc/modules no disponible en este initramfs minimalista"
+> } > /tmp/hito1.txt && cat /tmp/hito1.txtQEMU: Terminated
+root@codespaces-53ffae:/workspaces/copy-fail-challenge-B# mkdir -p evidence
+root@codespaces-53ffae:/workspaces/copy-fail-challenge-B# cp /tmp/hito1.txt evidence/hito1_vuln_confirmed.txt
+cp: cannot stat '/tmp/hito1.txt': No such file or directory
+root@codespaces-53ffae:/workspaces/copy-fail-challenge-B# mkdir -p evidence
+root@codespaces-53ffae:/workspaces/copy-fail-challenge-B# vi evidence/hito1_vuln_confirmed.txt
+root@codespaces-53ffae:/workspaces/copy-fail-challenge-B# history
+    1  apt update
+    2  apt install gh
+    3  gh api user --jq '"\(.name) → \(.email // .login)"'
+    4  git config --global user.name T1JOSEPH
+    5  git config --global user.email jovacame@uide.edu.ec
+    6  git config --global --add safe.directory /workspaces/copy-fail-challenge-1
+    7  make qemu
+    8  apt update
+    9  apt install -y file
+   10  make rootfs
+   11  make qemu
+   12  apt update
+   13  apt install -y file bzip2 cpio gzip flex bc build-essential libssl-dev libelf-dev qemu-system-xl
+   14  file
+   15  make qemu
+   16  exit
+   17  make setup
+   18  make qemu
+   19  cd /workspaces/copy-fail-challenge-B/kernel/initramfs
+   20  nano init
+   21  vi init
+   22  cd /workspaces/copy-fail-challenge-B
+   23  make rootfs
+   24  make qemu
+   25  mkdir -p evidence
+   26  cp /tmp/hito1.txt evidence/hito1_vuln_confirmed.txt
+   27  mkdir -p evidence
+   28  vi evidence/hito1_vuln_confirmed.txt
+    1  apt update
+    2  apt install gh
+    3  gh api user --jq '"\(.name) → \(.email // .login)"'
+    4  git config --global user.name T1JOSEPH
+    5  git config --global user.email jovacame@uide.edu.ec
+    6  git config --global --add safe.directory /workspaces/copy-fail-challenge-1
+    7  make qemu
+    8  apt update
+    9  apt install -y file
+   10  make rootfs
+   11  make qemu
+   12  apt update
+   13  apt install -y file bzip2 cpio gzip flex bc build-essential libssl-dev libelf-dev qemu-system-xl
+   14  file
+   15  make qemu
+   16  exit
+   17  make rootfs
+   18  make qemu
+   19  ls kernel/initramfs/usr/bin/
+   20  cp /usr/bin/python3 kernel/initramfs/usr/bin/python3
+   21  ls kernel/initramfs/usr/bin/ | grep python
+   22  make clean
+   23  make rootfs
+   24  vi scripts/03_build_rootfs.sh
+   25  make rootfs
+   26  vi scripts/03_build_rootfs.sh
+   27  grep initramfs.cpio.gz scripts/03_build_rootfs.sh
+   28  initramfs.cpio.gzy
+   29  vi scripts/03_build_rootfs.sh
+   30  make rootfs
+   31  grep -n gzy scripts/03_build_rootfs.sh
+   32  vi scripts/03_build_rootfs.sh
+   33  history
+    1  apt update
+    2  apt install gh
+    3  gh api user --jq '"\(.name) → \(.email // .login)"'
+    4  git config --global user.name T1JOSEPH
+    5  git config --global user.email jovacame@uide.edu.ec
+    6  git config --global --add safe.directory /workspaces/copy-fail-challenge-1
+    7  make qemu
+    8  apt update
+    9  apt install -y file
+   10  make rootfs
+   11  make qemu
+   12  apt update
+   13  apt install -y file bzip2 cpio gzip flex bc build-essential libssl-dev libelf-dev qemu-system-x86 wget curl
+   14  file
+   15  make qemu
+   16  exit
+   17  cd kernel/linux/crypto
+   18  grep -n "_aead_recvmsg" algif_aead.c
+   19  vi algif_aead.c
+   20  history

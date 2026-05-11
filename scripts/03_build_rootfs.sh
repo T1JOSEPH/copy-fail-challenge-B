@@ -108,5 +108,5 @@ cd "$INITRAMFS_DIR"
 find . | cpio -o -H newc 2>/dev/null | gzip > "$BUILD_DIR/initramfs.cpio.gz"
 
 SIZE=$(du -sh "$BUILD_DIR/initramfs.cpio.gz" | cut -f1)
-echo -e "${GREEN}✓ initramfs listo (${SIZE}) en: $BUILD_DIR/initramfs.cpio.gz${NC}"
 echo -e "${GREEN}  STUDENT_ID: ${STUDENT_ID}${NC}"
+echo "initramfs listo (${SIZE}) en: $BUILD_DIR/initramfs.cpio.gz"
